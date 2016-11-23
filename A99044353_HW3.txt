@@ -1,0 +1,52 @@
+CSE190 programming assignment 2
+
+1. Find persons who served as both actor and director in the same movie (display 
+person name and movie title).
+
+	MATCH (actor:Person)-[:ACTED_IN]->(movie:Movie)<-[:DIRECTED]-(director:Person)
+	WHERE actor.name = director.name
+	RETURN actor.name, movie.title
+
+2. Find the name of directors who have never acted.
+	
+	MATCH (n: Person) -[:DIRECTED] -> (movie:Movie)
+            WHERE NOT (n)-[:ACTED_IN]->(:Movie)
+            RETURN n.name
+
+3. For each person who has acted in at least one movie, add a label “Actor” to the node representing this person.
+
+            MATCH (actor:Person)-[:ACTED_IN]->(movie:Movie)
+            SET actor: Actor
+
+4. For each actor, add a “roleCount” attribute containing the number of roles the actor has interpreted overall.
+
+	MATCH (actor: Person) - [r:ACTED_IN] -> (movie: Movie)
+	WITH actor, count(r) as n
+            SET actor.roleCount = n
+
+5. For each director, find the number of roles they have directed (display director name and role number).
+
+	MATCH (actor: Person) - [r:ACTED_IN] -> (movie: Movie) <- [:DIRECTED] - (director:Person)
+            RETURN director.name, count(r.roles) AS roleNumber
+
+6. Find the name of actors who have worked with every director born after 1966.
+
+MATCH (a:Person)-[:DIRECTED]->(movie:Movie)
+WHERE a.born>1966
+SET a.selected = TRUE
+WITH count(distinct a) as num
+MATCH (a:Person) - [:ACTED_IN] -> (movie:Movie) <-[:DIRECTED]-(p:Person{selected:TRUE})
+WITH a, count(distinct p) as n, num as num
+SET a.count = n
+WITH num as num
+MATCH (a:Person{count:num})
+WITH a.name as name
+MATCH (p:Person)
+REMOVE p.selected,p.count
+RETURN distinct name
+
+7. Rename each ACTED_IN relation to APPEARED_IN, preserve the “roles” attribute.
+
+	MATCH (actor: Person) - [r:ACTED_IN] -> (movie: Movie)
+	CREATE (actor) - [x:APPEARED_IN {roles:r.roles}] -> (movie:Movie)
+	DELETE r
