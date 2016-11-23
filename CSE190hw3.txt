@@ -13,7 +13,7 @@ person name and movie title).
 	
 	MATCH (n: Person) -[:DIRECTED] -> (movie:Movie)
             WHERE NOT (n)-[:ACTED_IN]->(:Movie)
-            RETURN n.name
+            RETURN DISTINCT n.name
 
 3. For each person who has acted in at least one movie, add a label “Actor” to the node representing this person.
 
